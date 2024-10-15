@@ -39,6 +39,7 @@ class EvalCallback(BaseCallback):
     def _info_callback(self, locals, _):
         if locals['i'] == 0:
             env = locals['env']
+            env.has_multiproc = False 
             if env.has_multiproc:
                 pipe = env.remotes[0]
                 pipe.send(("render", "rgb_array"))
@@ -82,7 +83,7 @@ class EvalCallback(BaseCallback):
                     for i in v:
                         writer.append_data(i)
                     writer.close()
-                    wandb.log({'eval/rollout_video': wandb.Video(path)})
+                    #wandb.log({'eval/rollout_video': wandb.Video(path)})
                 else:
                     self.logger.record('eval/mean_{}'.format(k), np.mean(v))
             self.logger.dump(self.num_timesteps)

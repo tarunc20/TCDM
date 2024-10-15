@@ -47,9 +47,11 @@ class Sim2RealMimicTask(ObjMimicTask):
     def U(self, low, high):
         return self._random.uniform(low, high)
 
-
+from tcdm.envs.retargeting import initialize_genesis_environment
 def _obj_mimic_task_factory(name, object_class, robot_class, target_path):
     def task(append_time=True, pregrasp='initialized', reward_kwargs={}, environment_kwargs={}):
+        if name.startswith("genesis"):
+            return initialize_genesis_environment()
         # load target data and construct environment
         object_model = object_class()
         object_name = '{}/object'.format(object_model.mjcf_model.model)
@@ -73,7 +75,7 @@ def _obj_mimic_task_factory(name, object_class, robot_class, target_path):
 TCDM_DOMAINS = {}
 TCDM_DOMAINS['door'] = containers.TaggedTasks()
 with open(asset_abspath('task_trajs.yaml'), 'r') as g:
-    _TCDM_TRAJS = yaml.safe_load(g)['obj_mimic']
+    _TCDM_TRAJS = yaml.safe_load(g)['obj_mimic'] # list of file names
 
 for target_fname in _TCDM_TRAJS:
     target = target_fname.split('/')[-1][:-4]
@@ -86,11 +88,16 @@ for target_fname in _TCDM_TRAJS:
         object_class = mj_models.get_object(domain_name)
         robot_class = mj_models.Adroit
     except:
-        object_class = mj_models.get_object(task_name)
-        robot_class = mj_models.get_robot(domain_name)
+        object_class = mj_models.get_object(task_name) # given task and object name get xml generator file
+        robot_class = mj_models.get_robot(domain_name) 
     task = _obj_mimic_task_factory(task_name, object_class, 
                                    robot_class, target_fname)
     TCDM_DOMAINS[domain_name].add('mimic')(task)
+
+# add genesis tasks to TCDM domains 
+TCDM_DOMAINS['genesis'] = containers.TaggedTasks()
+genesis_brush_task = _obj_mimic_task_factory("genesis_brush", None, None, None)
+TCDM_DOMAINS['genesis'].add('mimic')(genesis_brush_task)
 DOOR_SUITE, HAMMER_SUITE, DMANUS_SUITE = [TCDM_DOMAINS[k] for k in ('door', 'hammer', 'dmanus')]
 
 

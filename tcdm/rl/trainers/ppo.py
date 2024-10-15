@@ -22,6 +22,10 @@ def ppo_trainer(config, resume_model=None):
     restore_freq = int(config.restore_checkpoint_freq // config.n_envs)
     n_steps = int(config.agent.params.n_steps // config.n_envs)
     multi_proc = bool(config.agent.multi_proc)
+
+    import genesis as gs
+    gs.init(seed=0, precision='32', logging_level='warning')
+    
     env = make_env(multi_proc=multi_proc, **config.env)
 
     if resume_model:
@@ -61,9 +65,9 @@ def ppo_trainer(config, resume_model=None):
     log_info = InfoCallback()
     checkpoint = CheckpointCallback(save_freq=save_freq, save_path=f'logs/', 
                                     name_prefix='rl_models')
-    wandb = WandbCallback(model_save_path="models/", verbose=2)
+    #wandb = WandbCallback(model_save_path="models/", verbose=2)
     return model.learn(
                         total_timesteps=total_timesteps,
-                        callback=[log_info, eval_callback, checkpoint, restore_callback, wandb],
+                        callback=[log_info, eval_callback, checkpoint, restore_callback],#, wandb],
                         reset_num_timesteps=reset_num_timesteps
                       )

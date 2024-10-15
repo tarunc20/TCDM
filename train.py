@@ -10,6 +10,12 @@ from tcdm.rl import trainers
 from omegaconf import DictConfig, OmegaConf
 from hydra.core.hydra_config import HydraConfig
 
+# numpy stuff
+import numpy as np
+np.int = np.int32
+np.float = np.float64
+np.bool = np.bool_
+
 
 def create_wandb_run(wandb_cfg, job_config, run_id=None):
     try:
@@ -43,7 +49,7 @@ def train(cfg: DictConfig):
         if os.path.exists('exp_config.yaml'):
             old_config = yaml.load(open('exp_config.yaml', 'r'))
             params, wandb_id = old_config['params'], old_config['wandb_id']
-            run = create_wandb_run(cfg.wandb, params, wandb_id)
+            #run = create_wandb_run(cfg.wandb, params, wandb_id)
             resume_model = 'restore_checkpoint.zip'
             assert os.path.exists(resume_model), 'restore_checkpoint.zip does not exist!'
         else:
@@ -51,9 +57,9 @@ def train(cfg: DictConfig):
             params = yaml.safe_load(cfg_yaml)
             params['defaults'] = {k: defaults[k] for k in ('agent', 'env')}
 
-            run = create_wandb_run(cfg.wandb, params)
-            save_dict = dict(wandb_id=run.id, params=params)
-            yaml.dump(save_dict, open('exp_config.yaml', 'w'))
+            #run = create_wandb_run(cfg.wandb, params)
+            #save_dict = dict(wandb_id=run.id, params=params)
+            #yaml.dump(save_dict, open('exp_config.yaml', 'w'))
             print('Config:')
             print(cfg_yaml)
         
@@ -61,7 +67,7 @@ def train(cfg: DictConfig):
             trainers.ppo_trainer(cfg, resume_model)
         else:
             raise NotImplementedError
-        wandb.finish()
+        #wandb.finish()
     except:
         traceback.print_exc(file=open('exception.log', 'w'))
         with open('exception.log', 'r') as f:
